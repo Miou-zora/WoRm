@@ -1,6 +1,6 @@
 # WoRm
 
-This project is an implementation of a worm (or snake) entity which is inspired by Terraria's Worm (more precisely, [The Devourer of Gods](https://calamitymod.wiki.gg/wiki/The_Devourer_of_Gods)).
+This project is an implementation in [Rust](https://www.rust-lang.org/fr) & [Bevy](https://bevyengine.org/) of a worm (or snake) entity which is inspired by Terraria's Worm (more precisely, [The Devourer of Gods](https://calamitymod.wiki.gg/wiki/The_Devourer_of_Gods)).
 
 The worm is a chain of segments that follow the head segment.
 
