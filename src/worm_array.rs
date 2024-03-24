@@ -80,7 +80,7 @@ pub fn update_worm_pos(
             .iter()
             .zip(worm.parts.0.iter().skip(1))
             .for_each(|(pos, segment)| {
-                let mut actual_pos = positions.get_mut(*segment).unwrap().translation;
+                let actual_pos = positions.get_mut(*segment).unwrap().translation;
                 let distance = pos.translation.distance(actual_pos);
                 if distance > 41.0 {
                     let direction = pos.translation - actual_pos;
