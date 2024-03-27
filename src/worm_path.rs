@@ -5,33 +5,33 @@ use bevy::window::PrimaryWindow;
 #[derive(Component)]
 pub struct Head;
 
-#[derive(Component)]
-pub struct PathPoint;
-
-#[derive(Component)]
-pub struct WormPath {
-    path: Vec<Entity>, // 2D because 3D is GWA GWA
-    head: Entity,
+#[derive(Default)]
+pub struct Path {
+    points: Vec<Vec2>, // 2D because 3D is GWA GWA
 }
 
-pub fn setup_head(mut commands: Commands) {
-    let head = commands.spawn(SpriteBundle {
-        sprite: Sprite {
-            color: Color::RED,
-            ..Default::default()
-        },
-        transform: Transform {
-            scale: Vec3::new(10.0, 10.0, 10.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    })
-        .insert(Head).id();
+#[derive(Component, Default)]
+pub struct Worm {
+    path: Path,
+    head: Option<Entity>,
+}
 
-    commands.spawn(WormPath {
-        path: Vec::new(),
-        head
-    });
+#[derive(Component)]
+struct TailPart;
+
+pub fn setup_head(mut commands: Commands) {
+    let head = commands.spawn(SpriteBundle { ..default() })
+        .insert(Head)
+        .insert(Name::new("WormHead")).id();
+
+    commands.spawn(
+        Worm {
+            head: Some(head),
+            ..default()
+        })
+        .insert(Name::new("Worm"))
+        .push_children(&[head]);
+
 }
 
 pub fn update_head(
@@ -47,54 +47,63 @@ pub fn update_head(
     q_head.iter_mut().next().unwrap().1.translation = Vec3::new(cursor_pos.x, cursor_pos.y, 0.0);
 }
 
-pub fn update_path(
-    mut commands: Commands,
-    mut q_path: Query<(&mut WormPath)>,
-    q_head: Query<&Transform, With<Head>>,
-    q_tail: Query<&Transform, With<PathPoint>>
+pub fn update_worm(
+    mut q_worm: Query<&mut Worm>,
+    q_head: Query<&Transform, With<Head>>
 )
 {
     let head_pos = q_head.iter().next().unwrap().translation;
-    let mut worm_path = q_path.iter_mut().next().unwrap();
+    let mut worm = q_worm.iter_mut().next().unwrap();
 
-    if worm_path.path.is_empty() {
-        println!("Path is empty");
-        worm_path.path.push(commands.spawn(SpriteBundle {
-            sprite: Sprite {
-                color: Color::BLUE,
-                ..Default::default()
-            },
-            transform: Transform {
-                translation: head_pos,
-                scale: Vec3::new(5.0, 5.0, 5.0),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-            .insert(PathPoint)
-            .id());
+    if worm.path.points.is_empty() {
+        spawn_path_point(head_pos.xy(), &mut worm);
+        spawn_path_point(head_pos.xy(), &mut worm);
         return;
     }
-    let last_tail_entity = worm_path.path.last().unwrap();
-    let last_tail = q_tail.get(*last_tail_entity).unwrap();
-    // if distance between head and last tail is greater than 10, add a new tail
-    if head_pos.distance(last_tail.translation) > 30.0 {
-        worm_path.path.push(commands.spawn(SpriteBundle {
-            sprite: Sprite {
-                color: Color::BLUE,
-                ..Default::default()
-            },
-            transform: Transform {
-                translation: head_pos,
-                scale: Vec3::new(5.0, 5.0, 5.0),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-            .insert(PathPoint)
-            .id());
+    let worm_path_len = worm.path.points.len();
+    if worm_path_len >= 2 {
+        worm.path.points[worm_path_len - 1] = head_pos.xy();
     }
-    if worm_path.path.len() > 10 {
-        commands.entity(worm_path.path.remove(0)).despawn();
+
+    let mut last_path_pos_entity = *worm.path.points.last().unwrap();
+    if worm_path_len >= 2 {
+        last_path_pos_entity = worm.path.points[worm_path_len - 2];
+    }
+    // last
+    if last_path_pos_entity.distance(head_pos.xy()) > 30.0 {
+        spawn_path_point(head_pos.xy(), &mut worm);
+        if worm.path.points.len() > 10 {
+            // remove last point
+            worm.path.points.remove(0);
+            // worm.path.points.remove();
+        }
     }
 }
+
+fn spawn_path_point(head_pos: Vec2, worm: &mut Mut<Worm>) {
+    worm.path.points.push(head_pos);
+}
+
+pub fn debug_draw_path(
+    mut gizmos: Gizmos,
+    q_worm: Query<&Worm>,
+) {
+    for worm in q_worm.iter() {
+        if worm.path.points.len() < 1 { continue; }
+        for i in 0..worm.path.points.len() {
+            gizmos.circle_2d(worm.path.points[i], 5.0, Color::WHITE);
+        }
+    }
+}
+
+
+pub fn debug_draw_head(
+    mut gizmos: Gizmos,
+    q_head: Query<&Transform, With<Head>>
+) {
+    for head in q_head.iter() {
+        gizmos.circle_2d(head.translation.xy(), 7.0, Color::RED);
+    }
+    // TODO: draw bezier curve or spline
+}
+
