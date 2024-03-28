@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::worm_path::{debug_draw_head, debug_draw_path, setup_head, update_head, update_worm};
+use crate::worm_path::{debug_draw_path, setup_head, update_head, update_worm};
 
 mod worm_path;
 
@@ -80,6 +80,6 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_camera, setup_head))
         .add_systems(Update, ((update_head, update_worm).chain(),
-                              (debug_draw_path, debug_draw_head).chain()))
+                              (debug_draw_path).chain()))
         .run();
 }
