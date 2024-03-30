@@ -80,7 +80,7 @@ pub fn update_worm(
     q_childs: Query<(&GlobalTransform, &Name)>,
 )
 {
-    let mut all_worm = q_worm.iter_mut().next().unwrap();
+    let all_worm = q_worm.iter_mut().next().unwrap();
     let mut worm = all_worm.0;
 
     // Create 2 paths point if it doesn't exist

@@ -4,6 +4,8 @@ use crate::worm_path::{debug_draw_path, setup_head, update_head, update_worm, up
 
 mod worm_path;
 
+///! This main file is awful, I know, but I keep it to store what I've done so far
+
 // use crate::worm_linked_list::{Tail, update_worm, Worm, WormHeadBundle};
 
 // mod worm_linked_list;
