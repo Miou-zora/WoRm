@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 
-use crate::worm_array::{spawn_worm, update_worm_pos};
+use crate::worm_path::{debug_draw_path, setup_head, update_head, update_worm, update_worm_parts};
 
-mod worm_array;
+mod worm_path;
+
+///! This main file is awful, I know, but I keep it to store what I've done so far
 
 // use crate::worm_linked_list::{Tail, update_worm, Worm, WormHeadBundle};
 
@@ -78,7 +80,8 @@ fn setup_camera(mut commands: Commands) {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, (setup_camera, spawn_worm))
-        .add_systems(Update, update_worm_pos)
+        .add_systems(Startup, (setup_camera, setup_head))
+        .add_systems(Update, ((update_head, update_worm, update_worm_parts).chain(),
+                              debug_draw_path)) // Debug
         .run();
 }
