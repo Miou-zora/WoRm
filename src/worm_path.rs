@@ -1,3 +1,4 @@
+use std::ops::Mul;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
@@ -97,20 +98,20 @@ pub fn update_worm(
 
     // update head pos
     let mut worm_path_len = worm.path.points.len();
-    let before_last_path_pos_entity = worm.path.points[worm_path_len - 2];
-    let last_path_pos_entity = worm.path.points[worm_path_len - 1];
+    let mut before_last_path_pos_entity = worm.path.points[worm_path_len - 2];
+    let mut last_path_pos_entity = worm.path.points[worm_path_len - 1];
     let distance_between_last_and_head = before_last_path_pos_entity.distance(last_path_pos_entity);
 
     // make first point follow second
     if worm.path.points.len() == worm.path.number_of_points {
         let vector_between_first_and_second = worm.path.points[0] - worm.path.points[1];
         let normalized_vector = vector_between_first_and_second.normalize();
-        let new_point = worm.path.points[1] + normalized_vector * (worm.path.size as f32 / worm.path.number_of_points as f32 - distance_between_last_and_head);
+        let new_point = worm.path.points[1] + normalized_vector * (worm.path.size / worm.path.number_of_points as f32 - distance_between_last_and_head);
         worm.path.points[0] = new_point;
     }
 
     // spawn new path point if distance between last path point and head is > 30
-    if before_last_path_pos_entity.distance(last_path_pos_entity) > worm.path.size as f32 / (worm.path.number_of_points + 1) as f32 {
+    while before_last_path_pos_entity.distance(last_path_pos_entity) > worm.path.size / (worm.path.number_of_points + 1) as f32 {
 
         spawn_path_point(last_path_pos_entity, &mut worm);
         let vec_bl_to_l = last_path_pos_entity - before_last_path_pos_entity;
@@ -122,6 +123,9 @@ pub fn update_worm(
             worm.path.points.remove(0);
             // worm.path.points.remove();
         }
+        worm_path_len = worm.path.points.len();
+        before_last_path_pos_entity = worm.path.points[worm_path_len - 2];
+        last_path_pos_entity = worm.path.points[worm_path_len - 1];
     }
 }
 
@@ -171,6 +175,10 @@ pub fn debug_draw_path(
         }
         if worm.path.points.len() >= 2 {
             gizmos.circle_2d(worm.path.points[0], 7.0, Color::GREEN);
+        }
+        if worm.path.points.len() >= 3 {
+            let vec = worm.path.points[worm.path.points.len() - 1] - worm.path.points[worm.path.points.len() - 2] + (worm.path.points[worm.path.points.len() - 2] - worm.path.points[worm.path.points.len() - 3]) * 0.5;
+            gizmos.arrow_2d(worm.path.points[worm.path.points.len() - 1], worm.path.points[worm.path.points.len() - 1] + vec.normalize().mul(50.0), Color::FUCHSIA);
         }
         gizmos.circle_2d(worm.path.points[worm.path.points.len() - 1], 7.0, Color::BLUE);
     }
